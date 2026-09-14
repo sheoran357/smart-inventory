@@ -143,3 +143,38 @@ smart-inventory/
 │
 ├── .gitignore
 └── README.md
+
+
+## Screenshots
+
+### Login
+
+![Login](screenshots/login.png)
+
+### Dashboard
+
+![Dashboard](screenshots/dashboard.png)
+
+### Products
+
+![Products](screenshots/products.png)
+
+### Purchases
+
+![Purchases](screenshots/purchases.png)
+
+### Sales
+
+![Sales](screenshots/sales.png)
+
+### Transactions
+
+![Transactions](screenshots/transactions.png)
+
+### Users
+
+![Users](screenshots/users.png)
+
+### Reports
+
+![Reports](screenshots/reports.png)
