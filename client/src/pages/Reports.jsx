@@ -75,212 +75,274 @@ function Reports() {
     };
 
     if (loading) {
-        return <p>Loading reports...</p>;
+        return (
+            <p>
+                Loading reports...
+            </p>
+        );
     }
 
     return (
-        <div>
-            <h1>Reports</h1>
+        <div className="reports-page">
+
+            <div className="page-header">
+                <div>
+                    <h1>Reports</h1>
+
+                    <p className="page-subtitle">
+                        Analyze sales and inventory performance
+                    </p>
+                </div>
+            </div>
 
             {error && (
-                <p>
+                <p className="error">
                     Error: {error}
                 </p>
             )}
 
-            <h2>Report Filters</h2>
+            <div className="report-filters">
 
-            <div>
-                <label>Start Date</label>
-                <br />
-
-                <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) =>
-                        setStartDate(e.target.value)
-                    }
-                />
-            </div>
-
-            <br />
-
-            <div>
-                <label>End Date</label>
-                <br />
-
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) =>
-                        setEndDate(e.target.value)
-                    }
-                />
-            </div>
-
-            <br />
-
-            <button onClick={handleApplyFilter}>
-                Apply Filter
-            </button>
-
-            {" "}
-
-            <button onClick={handleClearFilter}>
-                Clear Filter
-            </button>
-
-            <hr />
-
-            <h2>Sales Summary</h2>
-
-            {salesSummary ? (
                 <div>
-                    <p>
-                        Total Sales:{" "}
-                        {salesSummary.total_sales}
-                    </p>
+                    <label>
+                        Start Date
+                    </label>
+                    <br />
 
-                    <p>
-                        Units Sold:{" "}
-                        {salesSummary.units_sold}
-                    </p>
-
-                    <p>
-                        Total Revenue: ₹
-                        {salesSummary.total_revenue}
-                    </p>
-                </div>
-            ) : (
-                <p>No sales summary available.</p>
-            )}
-
-            <hr />
-
-            <h2>Sales by Product</h2>
-
-            {salesByProduct.length === 0 ? (
-                <p>
-                    No sales data available.
-                </p>
-            ) : (
-                <table
-                    border="1"
-                    cellPadding="10"
-                >
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Units Sold</th>
-                            <th>Revenue</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {salesByProduct.map(
-                            (product) => (
-                                <tr
-                                    key={
-                                        product.product_id
-                                    }
-                                >
-                                    <td>
-                                        {
-                                            product.product_name
-                                        }
-                                    </td>
-
-                                    <td>
-                                        {
-                                            product.units_sold
-                                        }
-                                    </td>
-
-                                    <td>
-                                        ₹
-                                        {
-                                            product.revenue
-                                        }
-                                    </td>
-                                </tr>
+                    <input
+                        type="date"
+                        value={startDate}
+                        onChange={(e) =>
+                            setStartDate(
+                                e.target.value
                             )
-                        )}
-                    </tbody>
-                </table>
-            )}
+                        }
+                    />
+                </div>
 
-            <hr />
+                <div>
+                    <label>
+                        End Date
+                    </label>
+                    <br />
 
-            <h2>Inventory Report</h2>
+                    <input
+                        type="date"
+                        value={endDate}
+                        onChange={(e) =>
+                            setEndDate(
+                                e.target.value
+                            )
+                        }
+                    />
+                </div>
 
-            {inventory.length === 0 ? (
-                <p>
-                    No inventory data available.
-                </p>
-            ) : (
-                <table
-                    border="1"
-                    cellPadding="10"
-                >
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Product</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Quantity</th>
-                            <th>Reorder Level</th>
-                        </tr>
-                    </thead>
+                <div>
+                    <button
+                        onClick={handleApplyFilter}
+                    >
+                        Apply Filter
+                    </button>
 
-                    <tbody>
-                        {inventory.map(
-                            (product) => (
-                                <tr
-                                    key={
-                                        product.product_id
+                    {" "}
+
+                    <button
+                        onClick={handleClearFilter}
+                    >
+                        Clear Filter
+                    </button>
+                </div>
+
+            </div>
+
+            <section className="report-summary">
+
+                <h2>Sales Summary</h2>
+
+                <div className="report-stats">
+
+                    {salesSummary ? (
+                        <>
+                            <div className="stat-card">
+                                <span className="stat-label">
+                                    Total Sales
+                                </span>
+
+                                <strong>
+                                    {
+                                        salesSummary.total_sales
                                     }
-                                >
-                                    <td>
-                                        {
+                                </strong>
+                            </div>
+
+                            <div className="stat-card">
+                                <span className="stat-label">
+                                    Units Sold
+                                </span>
+
+                                <strong>
+                                    {
+                                        salesSummary.units_sold
+                                    }
+                                </strong>
+                            </div>
+
+                            <div className="stat-card">
+                                <span className="stat-label">
+                                    Total Revenue
+                                </span>
+
+                                <strong>
+                                    ₹
+                                    {
+                                        salesSummary.total_revenue
+                                    }
+                                </strong>
+                            </div>
+                        </>
+                    ) : (
+                        <p>
+                            No sales summary available.
+                        </p>
+                    )}
+
+                </div>
+
+            </section>
+
+            <section className="report-section">
+
+                <h2>Sales by Product</h2>
+
+                {salesByProduct.length === 0 ? (
+                    <p>
+                        No sales data available.
+                    </p>
+                ) : (
+                    <table
+                        border="1"
+                        cellPadding="10"
+                    >
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Units Sold</th>
+                                <th>Revenue</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {salesByProduct.map(
+                                (product) => (
+                                    <tr
+                                        key={
                                             product.product_id
                                         }
-                                    </td>
+                                    >
+                                        <td>
+                                            {
+                                                product.product_name
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {
-                                            product.product_name
+                                        <td>
+                                            {
+                                                product.units_sold
+                                            }
+                                        </td>
+
+                                        <td>
+                                            ₹
+                                            {
+                                                product.revenue
+                                            }
+                                        </td>
+                                    </tr>
+                                )
+                            )}
+                        </tbody>
+                    </table>
+                )}
+
+            </section>
+
+            <section className="report-section">
+
+                <h2>Inventory Report</h2>
+
+                {inventory.length === 0 ? (
+                    <p>
+                        No inventory data available.
+                    </p>
+                ) : (
+                    <table
+                        border="1"
+                        cellPadding="10"
+                    >
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Price</th>
+                                <th>Quantity</th>
+                                <th>Reorder Level</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {inventory.map(
+                                (product) => (
+                                    <tr
+                                        key={
+                                            product.product_id
                                         }
-                                    </td>
+                                    >
+                                        <td>
+                                            {
+                                                product.product_id
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {
-                                            product.category_name
-                                        }
-                                    </td>
+                                        <td>
+                                            {
+                                                product.product_name
+                                            }
+                                        </td>
 
-                                    <td>
-                                        ₹
-                                        {product.price}
-                                    </td>
+                                        <td>
+                                            {
+                                                product.category_name
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {
-                                            product.quantity
-                                        }
-                                    </td>
+                                        <td>
+                                            ₹
+                                            {
+                                                product.price
+                                            }
+                                        </td>
 
-                                    <td>
-                                        {
-                                            product.reorder_level
-                                        }
-                                    </td>
-                                </tr>
-                            )
-                        )}
-                    </tbody>
-                </table>
-            )}
+                                        <td>
+                                            {
+                                                product.quantity
+                                            }
+                                        </td>
+
+                                        <td>
+                                            {
+                                                product.reorder_level
+                                            }
+                                        </td>
+                                    </tr>
+                                )
+                            )}
+                        </tbody>
+                    </table>
+                )}
+
+            </section>
+
         </div>
     );
 }

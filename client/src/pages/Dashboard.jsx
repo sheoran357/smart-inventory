@@ -4,99 +4,286 @@ import { getDashboardSummary } from "../services/api";
 function Dashboard() {
     const [data, setData] = useState(null);
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        getDashboardSummary()
-            .then((result) => {
-                setData(result);
-            })
-            .catch((error) => {
-                setError(error.message);
-            });
+        loadDashboard();
     }, []);
 
-    if (error) {
-        return <p>Error: {error}</p>;
-    }
+    const loadDashboard = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-    if (!data) {
-        return <p>Loading dashboard...</p>;
-    }
+            const result = await getDashboardSummary();
+
+            setData(result);
+        } catch (error) {
+            setError(error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Get individual sections from API response
+    const productStats = data?.productStats;
+    const salesStats = data?.salesStats;
+    const purchaseStats = data?.purchaseStats;
+    const todaySales = data?.todaySales;
+    const lowStockProducts = data?.lowStockProducts || [];
+    const topSellingProducts = data?.topSellingProducts || [];
 
     return (
-        <div>
-            <h1>Dashboard</h1>
+        <div className="dashboard">
 
-            <h2>Products</h2>
-            <p>
-                Total Products: {data.productStats.total_products}
-            </p>
-            <p>
-                Total Units: {data.productStats.total_units}
-            </p>
-            <p>
-                Inventory Value: ₹{data.productStats.inventory_value}
-            </p>
+            <div className="page-header">
+                <div>
+                    <h1>Dashboard</h1>
 
-            <h2>Sales</h2>
-            <p>
-                Total Sales: {data.salesStats.total_sales}
-            </p>
-            <p>
-                Units Sold: {data.salesStats.units_sold}
-            </p>
-            <p>
-                Total Revenue: ₹{data.salesStats.total_revenue}
-            </p>
+                    <p className="page-subtitle">
+                        Overview of your inventory and business activity
+                    </p>
+                </div>
+            </div>
 
-            <h2>Purchases</h2>
-            <p>
-                Total Purchases: {data.purchaseStats.total_purchases}
-            </p>
-            <p>
-                Units Purchased: {data.purchaseStats.units_purchased}
-            </p>
-            <p>
-                Total Purchase Cost: ₹{data.purchaseStats.total_purchase_cost}
-            </p>
+            {error && (
+                <div className="error">
+                    {error}
 
-            <h2>Today</h2>
-            <p>
-                Today's Sales: {data.todaySales.sales_today}
-            </p>
-            <p>
-                Today's Revenue: ₹{data.todaySales.revenue_today}
-            </p>
-
-            <h2>Low Stock Products</h2>
-
-            {data.lowStockProducts.length === 0 ? (
-                <p>No low stock products.</p>
-            ) : (
-                <ul>
-                    {data.lowStockProducts.map((product) => (
-                        <li key={product.product_id}>
-                            {product.product_name}
-                        </li>
-                    ))}
-                </ul>
+                    <button onClick={loadDashboard}>
+                        Retry
+                    </button>
+                </div>
             )}
 
-            <h2>Top Selling Products</h2>
-
-            {data.topSellingProducts.length === 0 ? (
-                <p>No sales data available.</p>
+            {loading ? (
+                <p>Loading dashboard...</p>
             ) : (
-                <ul>
-                    {data.topSellingProducts.map((product) => (
-                        <li key={product.product_id}>
-                            {product.product_name} -{" "}
-                            {product.units_sold} units sold - ₹
-                            {product.revenue}
-                        </li>
-                    ))}
-                </ul>
+                <>
+                    {/* Statistics */}
+
+                    <div className="stats-grid">
+
+                        <div className="stat-card">
+                            <span className="stat-label">
+                                Total Products
+                            </span>
+
+                            <strong>
+                                {productStats?.total_products || 0}
+                            </strong>
+                        </div>
+
+                        <div className="stat-card">
+                            <span className="stat-label">
+                                Total Units
+                            </span>
+
+                            <strong>
+                                {productStats?.total_units || 0}
+                            </strong>
+                        </div>
+
+                        <div className="stat-card">
+                            <span className="stat-label">
+                                Inventory Value
+                            </span>
+
+                            <strong>
+                                ₹
+                                {Number(
+                                    productStats?.inventory_value || 0
+                                ).toLocaleString()}
+                            </strong>
+                        </div>
+
+                        <div className="stat-card">
+                            <span className="stat-label">
+                                Total Sales
+                            </span>
+
+                            <strong>
+                                {salesStats?.total_sales || 0}
+                            </strong>
+                        </div>
+
+                        <div className="stat-card">
+                            <span className="stat-label">
+                                Total Revenue
+                            </span>
+
+                            <strong>
+                                ₹
+                                {Number(
+                                    salesStats?.total_revenue || 0
+                                ).toLocaleString()}
+                            </strong>
+                        </div>
+
+                        <div className="stat-card">
+                            <span className="stat-label">
+                                Total Purchases
+                            </span>
+
+                            <strong>
+                                {purchaseStats?.total_purchases || 0}
+                            </strong>
+                        </div>
+
+                    </div>
+
+                    {/* Today's Sales + Low Stock */}
+
+                    <div className="dashboard-grid">
+
+                        <section className="dashboard-card">
+
+                            <h2>Today's Sales</h2>
+
+                            <div className="today-sales">
+
+                                <div>
+                                    <span>Sales</span>
+
+                                    <strong>
+                                        {todaySales?.sales_today || 0}
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>Revenue</span>
+
+                                    <strong>
+                                        ₹
+                                        {Number(
+                                            todaySales?.revenue_today || 0
+                                        ).toLocaleString()}
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </section>
+
+                        <section className="dashboard-card">
+
+                            <h2>Low Stock Products</h2>
+
+                            {lowStockProducts.length === 0 ? (
+                                <p>
+                                    No low-stock products.
+                                </p>
+                            ) : (
+                                <table>
+
+                                    <thead>
+                                        <tr>
+                                            <th>Product</th>
+                                            <th>Stock</th>
+                                            <th>Reorder Level</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+
+                                        {lowStockProducts.map(
+                                            (product) => (
+                                                <tr
+                                                    key={
+                                                        product.product_id
+                                                    }
+                                                >
+                                                    <td>
+                                                        {
+                                                            product.product_name
+                                                        }
+                                                    </td>
+
+                                                    <td>
+                                                        {
+                                                            product.quantity
+                                                        }
+                                                    </td>
+
+                                                    <td>
+                                                        {
+                                                            product.reorder_level
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            )
+                                        )}
+
+                                    </tbody>
+
+                                </table>
+                            )}
+
+                        </section>
+
+                    </div>
+
+                    {/* Top Selling Products */}
+
+                    <section className="dashboard-card">
+
+                        <h2>Top Selling Products</h2>
+
+                        {topSellingProducts.length === 0 ? (
+                            <p>
+                                No sales data available.
+                            </p>
+                        ) : (
+                            <table>
+
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Units Sold</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+
+                                    {topSellingProducts.map(
+                                        (product) => (
+                                            <tr
+                                                key={
+                                                    product.product_id
+                                                }
+                                            >
+                                                <td>
+                                                    {
+                                                        product.product_name
+                                                    }
+                                                </td>
+
+                                                <td>
+                                                    {
+                                                        product.units_sold
+                                                    }
+                                                </td>
+
+                                                <td>
+                                                    ₹
+                                                    {Number(
+                                                        product.revenue || 0
+                                                    ).toLocaleString()}
+                                                </td>
+                                            </tr>
+                                        )
+                                    )}
+
+                                </tbody>
+
+                            </table>
+                        )}
+
+                    </section>
+                </>
             )}
+
         </div>
     );
 }

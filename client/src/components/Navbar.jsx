@@ -10,49 +10,91 @@ function Navbar() {
         navigate("/login");
     };
 
-    const isAdmin = user?.role_name === "ADMIN";
-    const isManager = user?.role_name === "MANAGER";
-    const isStaff = user?.role_name === "STAFF";
+    const isAdmin = user?.role === "ADMIN";
+    const isManager = user?.role === "MANAGER";
 
     return (
-        <nav>
-            <h2>Smart Inventory</h2>
+        <nav className="navbar">
 
-            <div>
-                <Link to="/dashboard">Dashboard</Link>{" "}
+            {/* Brand */}
+            <div className="navbar-brand">
+                Smart Inventory
+            </div>
 
-                <Link to="/products">Products</Link>{" "}
+            {/* Navigation Links */}
+            <div className="navbar-links">
 
-                <Link to="/transactions">Transactions</Link>{" "}
+                {/* ADMIN + MANAGER */}
+                {(isAdmin || isManager) && (
+                    <Link to="/dashboard">
+                        Dashboard
+                    </Link>
+                )}
 
+                {/* EVERYONE */}
+                <Link to="/products">
+                    Products
+                </Link>
+
+                {/* EVERYONE */}
+                <Link to="/transactions">
+                    Transactions
+                </Link>
+
+                {/* ADMIN + MANAGER */}
                 {(isAdmin || isManager) && (
                     <>
-                        <Link to="/purchases">Purchases</Link>{" "}
-                        <Link to="/categories">Categories</Link>{" "}
-                        <Link to="/suppliers">Suppliers</Link>{" "}
+                        <Link to="/purchases">
+                            Purchases
+                        </Link>
+
+                        <Link to="/categories">
+                            Categories
+                        </Link>
+
+                        <Link to="/suppliers">
+                            Suppliers
+                        </Link>
                     </>
                 )}
 
-                <Link to="/sales">Sales</Link>{" "}
+                {/* EVERYONE */}
+                <Link to="/sales">
+                    Sales
+                </Link>
 
+                {/* ADMIN + MANAGER */}
                 {(isAdmin || isManager) && (
-                    <Link to="/reports">Reports</Link>
-                )}{" "}
-
-                {isAdmin && (
-                    <Link to="/users">Users</Link>
+                    <Link to="/reports">
+                        Reports
+                    </Link>
                 )}
+
+                {/* ADMIN ONLY */}
+                {isAdmin && (
+                    <Link to="/users">
+                        Users
+                    </Link>
+                )}
+
             </div>
 
-            <div>
-                <span>
-                    {user?.name} ({user?.role_name})
-                </span>{" "}
+            {/* User Information + Logout */}
+            <div className="navbar-user">
 
-                <button onClick={handleLogout}>
+                <span>
+                    {user?.name} ({user?.role})
+                </span>
+
+                <button
+                    className="logout-btn"
+                    onClick={handleLogout}
+                >
                     Logout
                 </button>
+
             </div>
+
         </nav>
     );
 }

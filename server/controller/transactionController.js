@@ -162,7 +162,106 @@ const getProductTransactions = async (req, res) => {
 };
 
 
+const returnStock = async (req, res) => {
+    const connection = await pool.getConnection();
+
+    try {
+        const { id } = req.params;
+        const { quantity, reason } = req.body;
+
+        if (!quantity || Number(quantity) <= 0) {
+            return res.status(400).json({
+                message: "Return quantity must be greater than 0"
+            });
+        }
+
+        if (!reason || reason.trim() === "") {
+            return res.status(400).json({
+                message: "Return reason is required"
+            });
+        }
+
+        await connection.beginTransaction();
+
+        const [products] = await connection.query(
+            `SELECT product_id, product_name, quantity
+             FROM products
+             WHERE product_id = ?
+             AND is_active = TRUE
+             FOR UPDATE`,
+            [id]
+        );
+
+        if (products.length === 0) {
+            await connection.rollback();
+
+            return res.status(404).json({
+                message: "Product not found"
+            });
+        }
+
+        const product = products[0];
+
+        const returnQuantity = Number(quantity);
+
+        const newQuantity =
+            product.quantity + returnQuantity;
+
+        await connection.query(
+            `UPDATE products
+             SET quantity = ?
+             WHERE product_id = ?`,
+            [newQuantity, id]
+        );
+
+        await connection.query(
+            `INSERT INTO inventory_transactions
+             (
+                product_id,
+                transaction_type,
+                quantity,
+                user_id,
+                reason
+             )
+             VALUES (?, 'RETURN', ?, ?, ?)`,
+            [
+                id,
+                returnQuantity,
+                req.user.user_id,
+                reason.trim()
+            ]
+        );
+
+        await connection.commit();
+
+        res.status(201).json({
+            message: "Stock returned successfully",
+            product_id: Number(id),
+            old_quantity: product.quantity,
+            returned_quantity: returnQuantity,
+            new_quantity: newQuantity,
+            reason: reason.trim()
+        });
+
+    } catch (error) {
+        await connection.rollback();
+
+        console.error(
+            "Return stock error:",
+            error
+        );
+
+        res.status(500).json({
+            message: "Failed to return stock"
+        });
+
+    } finally {
+        connection.release();
+    }
+};
+
 module.exports = {
     getTransactions,
-    getProductTransactions
+    getProductTransactions,
+    returnStock
 };

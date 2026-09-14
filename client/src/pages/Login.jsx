@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 
 function Login() {
     const { login } = useAuth();
+
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -24,9 +25,8 @@ function Login() {
                 password
             });
 
-           login(data);
+            login(data);
 
-           
             // Go to dashboard
             navigate("/dashboard");
 
@@ -38,52 +38,76 @@ function Login() {
     };
 
     return (
-        <div>
-            <h1>Smart Inventory System</h1>
+        <div className="login-page">
 
-            <h2>Login</h2>
+            <div className="login-card">
 
-            <form onSubmit={handleSubmit}>
+                <div className="login-header">
+                    <h1>Smart Inventory</h1>
 
-                <div>
-                    <label>Email</label>
-                    <br />
-
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="Enter email"
-                        required
-                    />
+                    <p>
+                        Sign in to your account
+                    </p>
                 </div>
-
-                <br />
-
-                <div>
-                    <label>Password</label>
-                    <br />
-
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Enter password"
-                        required
-                    />
-                </div>
-
-                <br />
 
                 {error && (
-                    <p>{error}</p>
+                    <div className="error">
+                        {error}
+                    </div>
                 )}
 
-                <button type="submit" disabled={loading}>
-                    {loading ? "Logging in..." : "Login"}
-                </button>
+                <form onSubmit={handleSubmit}>
 
-            </form>
+                    <div className="form-group">
+                        <label>
+                            Email
+                        </label>
+
+                        <input
+                            type="email"
+                            value={email}
+                            onChange={(e) =>
+                                setEmail(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="Enter your email"
+                            required
+                        />
+                    </div>
+
+                    <div className="form-group">
+                        <label>
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            value={password}
+                            onChange={(e) =>
+                                setPassword(
+                                    e.target.value
+                                )
+                            }
+                            placeholder="Enter your password"
+                            required
+                        />
+                    </div>
+
+                    <button
+                        type="submit"
+                        className="login-btn"
+                        disabled={loading}
+                    >
+                        {loading
+                            ? "Signing in..."
+                            : "Sign In"}
+                    </button>
+
+                </form>
+
+            </div>
+
         </div>
     );
 }

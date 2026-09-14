@@ -155,14 +155,25 @@ function Suppliers() {
     }
 
     return (
-        <div>
-            <h1>Suppliers</h1>
+        <div className="suppliers-page">
+
+            <div className="page-header">
+                <div>
+                    <h1>Suppliers</h1>
+
+                    <p className="page-subtitle">
+                        Manage your product suppliers
+                    </p>
+                </div>
+            </div>
 
             {error && (
-                <p>Error: {error}</p>
+                <p className="error">
+                    Error: {error}
+                </p>
             )}
 
-            <form onSubmit={handleSubmit}>
+            <section className="form-card">
 
                 <h2>
                     {editingSupplier
@@ -170,180 +181,199 @@ function Suppliers() {
                         : "Add Supplier"}
                 </h2>
 
-                {formError && (
-                    <p>{formError}</p>
-                )}
+                <form onSubmit={handleSubmit}>
 
-                <div>
-                    <label>
-                        Supplier Name
-                    </label>
+                    {formError && (
+                        <p className="error">
+                            {formError}
+                        </p>
+                    )}
+
+                    <div>
+                        <label>
+                            Supplier Name
+                        </label>
+                        <br />
+
+                        <input
+                            type="text"
+                            name="supplier_name"
+                            value={
+                                formData.supplier_name
+                            }
+                            onChange={handleChange}
+                            required
+                        />
+                    </div>
+
                     <br />
 
-                    <input
-                        type="text"
-                        name="supplier_name"
-                        value={
-                            formData.supplier_name
-                        }
-                        onChange={handleChange}
-                        required
-                    />
-                </div>
+                    <div>
+                        <label>Email</label>
+                        <br />
 
-                <br />
+                        <input
+                            type="email"
+                            name="email"
+                            value={formData.email}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <label>Email</label>
                     <br />
 
-                    <input
-                        type="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                    />
-                </div>
+                    <div>
+                        <label>Phone</label>
+                        <br />
 
-                <br />
+                        <input
+                            type="text"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <label>Phone</label>
                     <br />
 
-                    <input
-                        type="text"
-                        name="phone"
-                        value={formData.phone}
-                        onChange={handleChange}
-                    />
-                </div>
+                    <div>
+                        <label>Address</label>
+                        <br />
 
-                <br />
+                        <textarea
+                            name="address"
+                            value={formData.address}
+                            onChange={handleChange}
+                        />
+                    </div>
 
-                <div>
-                    <label>Address</label>
                     <br />
 
-                    <textarea
-                        name="address"
-                        value={formData.address}
-                        onChange={handleChange}
-                    />
+                    <button type="submit">
+                        {editingSupplier
+                            ? "Update Supplier"
+                            : "Add Supplier"}
+                    </button>
+
+                    {editingSupplier && (
+                        <>
+                            {" "}
+
+                            <button
+                                type="button"
+                                onClick={resetForm}
+                            >
+                                Cancel
+                            </button>
+                        </>
+                    )}
+
+                </form>
+
+            </section>
+
+            <section className="supplier-list">
+
+                <div className="section-header">
+
+                    <div>
+                        <h2>Supplier List</h2>
+
+                        <p className="page-subtitle">
+                            All registered suppliers
+                        </p>
+                    </div>
+
                 </div>
 
-                <br />
+                {suppliers.length === 0 ? (
+                    <p>No suppliers found.</p>
+                ) : (
+                    <table
+                        border="1"
+                        cellPadding="10"
+                    >
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Address</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
 
-                <button type="submit">
-                    {editingSupplier
-                        ? "Update Supplier"
-                        : "Add Supplier"}
-                </button>
-
-                {editingSupplier && (
-                    <>
-                        {" "}
-
-                        <button
-                            type="button"
-                            onClick={resetForm}
-                        >
-                            Cancel
-                        </button>
-                    </>
-                )}
-
-            </form>
-
-            <hr />
-
-            <h2>Supplier List</h2>
-
-            {suppliers.length === 0 ? (
-                <p>No suppliers found.</p>
-            ) : (
-                <table
-                    border="1"
-                    cellPadding="10"
-                >
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Address</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {suppliers.map(
-                            (supplier) => (
-                                <tr
-                                    key={
-                                        supplier.supplier_id
-                                    }
-                                >
-                                    <td>
-                                        {
+                        <tbody>
+                            {suppliers.map(
+                                (supplier) => (
+                                    <tr
+                                        key={
                                             supplier.supplier_id
                                         }
-                                    </td>
-
-                                    <td>
-                                        {
-                                            supplier.supplier_name
-                                        }
-                                    </td>
-
-                                    <td>
-                                        {
-                                            supplier.email
-                                        }
-                                    </td>
-
-                                    <td>
-                                        {
-                                            supplier.phone
-                                        }
-                                    </td>
-
-                                    <td>
-                                        {
-                                            supplier.address
-                                        }
-                                    </td>
-
-                                    <td>
-                                        <button
-                                            onClick={() =>
-                                                handleEdit(
-                                                    supplier
-                                                )
+                                    >
+                                        <td>
+                                            {
+                                                supplier.supplier_id
                                             }
-                                        >
-                                            Edit
-                                        </button>
+                                        </td>
 
-                                        {" "}
-
-                                        <button
-                                            onClick={() =>
-                                                handleDelete(
-                                                    supplier.supplier_id
-                                                )
+                                        <td>
+                                            {
+                                                supplier.supplier_name
                                             }
-                                        >
-                                            Delete
-                                        </button>
-                                    </td>
-                                </tr>
-                            )
-                        )}
-                    </tbody>
-                </table>
-            )}
+                                        </td>
+
+                                        <td>
+                                            {
+                                                supplier.email
+                                            }
+                                        </td>
+
+                                        <td>
+                                            {
+                                                supplier.phone
+                                            }
+                                        </td>
+
+                                        <td>
+                                            {
+                                                supplier.address
+                                            }
+                                        </td>
+
+                                        <td>
+                                            <button
+                                                onClick={() =>
+                                                    handleEdit(
+                                                        supplier
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+
+                                            {" "}
+
+                                            <button
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        supplier.supplier_id
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+                                        </td>
+                                    </tr>
+                                )
+                            )}
+                        </tbody>
+                    </table>
+                )}
+
+            </section>
+
         </div>
     );
 }

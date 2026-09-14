@@ -12,7 +12,8 @@ function Categories() {
 
     const [categoryName, setCategoryName] = useState("");
 
-    const [editingCategory, setEditingCategory] = useState(null);
+    const [editingCategory, setEditingCategory] =
+        useState(null);
 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -55,12 +56,14 @@ function Categories() {
                 await updateCategory(
                     editingCategory.category_id,
                     {
-                        category_name: categoryName.trim()
+                        category_name:
+                            categoryName.trim()
                     }
                 );
             } else {
                 await createCategory({
-                    category_name: categoryName.trim()
+                    category_name:
+                        categoryName.trim()
                 });
             }
 
@@ -112,18 +115,45 @@ function Categories() {
     };
 
     if (loading) {
-        return <p>Loading categories...</p>;
+        return (
+            <p>
+                Loading categories...
+            </p>
+        );
     }
 
     if (error) {
-        return <p>Error: {error}</p>;
+        return (
+            <p>
+                Error: {error}
+            </p>
+        );
     }
 
     return (
-        <div>
-            <h1>Categories</h1>
+        <div className="categories-page">
 
-            <form onSubmit={handleSubmit}>
+            {/* =========================
+                PAGE HEADER
+            ========================= */}
+
+            <div className="page-header">
+
+                <div>
+                    <h1>Categories</h1>
+
+                    <p className="page-subtitle">
+                        Manage product categories
+                    </p>
+                </div>
+
+            </div>
+
+            {/* =========================
+                CATEGORY FORM
+            ========================= */}
+
+            <section className="form-card">
 
                 <h2>
                     {editingCategory
@@ -131,102 +161,154 @@ function Categories() {
                         : "Add Category"}
                 </h2>
 
-                {formError && (
-                    <p>{formError}</p>
-                )}
+                <form onSubmit={handleSubmit}>
 
-                <input
-                    type="text"
-                    placeholder="Category name"
-                    value={categoryName}
-                    onChange={(e) =>
-                        setCategoryName(e.target.value)
-                    }
-                />
+                    {formError && (
+                        <p className="error">
+                            {formError}
+                        </p>
+                    )}
 
-                {" "}
+                    <input
+                        type="text"
+                        placeholder="Category name"
+                        value={categoryName}
+                        onChange={(e) =>
+                            setCategoryName(
+                                e.target.value
+                            )
+                        }
+                    />
 
-                <button type="submit">
-                    {editingCategory
-                        ? "Update"
-                        : "Add"}
-                </button>
+                    {" "}
 
-                {editingCategory && (
-                    <>
-                        {" "}
+                    <button type="submit">
+                        {editingCategory
+                            ? "Update"
+                            : "Add"}
+                    </button>
 
-                        <button
-                            type="button"
-                            onClick={handleCancel}
-                        >
-                            Cancel
-                        </button>
-                    </>
-                )}
+                    {editingCategory && (
+                        <>
+                            {" "}
 
-            </form>
-
-            <hr />
-
-            <h2>Category List</h2>
-
-            {categories.length === 0 ? (
-                <p>No categories found.</p>
-            ) : (
-                <table
-                    border="1"
-                    cellPadding="10"
-                >
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Category Name</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {categories.map((category) => (
-                            <tr
-                                key={category.category_id}
+                            <button
+                                type="button"
+                                onClick={
+                                    handleCancel
+                                }
                             >
-                                <td>
-                                    {category.category_id}
-                                </td>
+                                Cancel
+                            </button>
+                        </>
+                    )}
 
-                                <td>
-                                    {category.category_name}
-                                </td>
+                </form>
 
-                                <td>
-                                    <button
-                                        onClick={() =>
-                                            handleEdit(
-                                                category
-                                            )
-                                        }
-                                    >
-                                        Edit
-                                    </button>
+            </section>
 
-                                    {" "}
+            {/* =========================
+                CATEGORY LIST
+            ========================= */}
 
-                                    <button
-                                        onClick={() =>
-                                            handleDelete(
-                                                category.category_id
-                                            )
-                                        }
-                                    >
-                                        Delete
-                                    </button>
-                                </td>
+            <section className="category-list">
+
+                <div className="section-header">
+
+                    <div>
+                        <h2>
+                            Category List
+                        </h2>
+
+                        <p className="page-subtitle">
+                            All available product
+                            categories
+                        </p>
+                    </div>
+
+                </div>
+
+                {categories.length === 0 ? (
+                    <p>
+                        No categories found.
+                    </p>
+                ) : (
+                    <table
+                        border="1"
+                        cellPadding="10"
+                    >
+
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>
+                                    Category Name
+                                </th>
+                                <th>
+                                    Actions
+                                </th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
+                        </thead>
+
+                        <tbody>
+
+                            {categories.map(
+                                (category) => (
+                                    <tr
+                                        key={
+                                            category.category_id
+                                        }
+                                    >
+
+                                        <td>
+                                            {
+                                                category.category_id
+                                            }
+                                        </td>
+
+                                        <td>
+                                            {
+                                                category.category_name
+                                            }
+                                        </td>
+
+                                        <td>
+
+                                            <button
+                                                onClick={() =>
+                                                    handleEdit(
+                                                        category
+                                                    )
+                                                }
+                                            >
+                                                Edit
+                                            </button>
+
+                                            {" "}
+
+                                            <button
+                                                onClick={() =>
+                                                    handleDelete(
+                                                        category.category_id
+                                                    )
+                                                }
+                                            >
+                                                Delete
+                                            </button>
+
+                                        </td>
+
+                                    </tr>
+                                )
+                            )}
+
+                        </tbody>
+
+                    </table>
+                )}
+
+            </section>
+
         </div>
     );
 }

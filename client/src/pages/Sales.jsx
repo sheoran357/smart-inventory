@@ -103,7 +103,8 @@ function Sales() {
         const productId = e.target.value;
 
         const selectedProduct = products.find(
-            (product) => product.product_id === Number(productId)
+            (product) =>
+                product.product_id === Number(productId)
         );
 
         setFormData({
@@ -129,8 +130,13 @@ function Sales() {
             return;
         }
 
-        if (!formData.quantity || Number(formData.quantity) <= 0) {
-            setFormError("Quantity must be greater than 0");
+        if (
+            !formData.quantity ||
+            Number(formData.quantity) <= 0
+        ) {
+            setFormError(
+                "Quantity must be greater than 0"
+            );
             return;
         }
 
@@ -138,18 +144,22 @@ function Sales() {
             formData.selling_price === "" ||
             Number(formData.selling_price) < 0
         ) {
-            setFormError("Selling price must be 0 or greater");
+            setFormError(
+                "Selling price must be 0 or greater"
+            );
             return;
         }
 
         const selectedProduct = products.find(
             (product) =>
-                product.product_id === Number(formData.product_id)
+                product.product_id ===
+                Number(formData.product_id)
         );
 
         if (
             selectedProduct &&
-            Number(formData.quantity) > selectedProduct.quantity
+            Number(formData.quantity) >
+                selectedProduct.quantity
         ) {
             setFormError(
                 `Only ${selectedProduct.quantity} units are available`
@@ -163,7 +173,9 @@ function Sales() {
             const data = await createSale({
                 product_id: Number(formData.product_id),
                 quantity: Number(formData.quantity),
-                selling_price: Number(formData.selling_price)
+                selling_price: Number(
+                    formData.selling_price
+                )
             });
 
             setSuccess(
@@ -179,7 +191,6 @@ function Sales() {
             await loadProducts();
             await loadSales();
 
-
         } catch (error) {
             setFormError(error.message);
         } finally {
@@ -189,7 +200,8 @@ function Sales() {
 
     const selectedProduct = products.find(
         (product) =>
-            product.product_id === Number(formData.product_id)
+            product.product_id ===
+            Number(formData.product_id)
     );
 
     if (loading) {
@@ -197,248 +209,332 @@ function Sales() {
     }
 
     return (
-        <div>
-            <h1>Sales</h1>
+        <div className="sales-page">
+
+            {/* =========================
+                PAGE HEADER
+            ========================= */}
+
+            <div className="page-header">
+
+                <div>
+                    <h1>Sales</h1>
+
+                    <p className="page-subtitle">
+                        Create sales and view sales history
+                    </p>
+                </div>
+
+            </div>
 
             {error && (
-                <p>
+                <p className="error">
                     Error: {error}
                 </p>
             )}
 
-            <form onSubmit={handleSubmit}>
+            {/* =========================
+                CREATE SALE FORM
+            ========================= */}
+
+            <section className="form-card">
+
                 <h2>Create Sale</h2>
 
-                {formError && (
-                    <p>
-                        {formError}
-                    </p>
-                )}
+                <form onSubmit={handleSubmit}>
 
-                {success && (
-                    <p>
-                        {success}
-                    </p>
-                )}
+                    {formError && (
+                        <p className="error">
+                            {formError}
+                        </p>
+                    )}
 
-                <div>
-                    <label>Product</label>
-                    <br />
+                    {success && (
+                        <p className="success">
+                            {success}
+                        </p>
+                    )}
 
-                    <select
-                        name="product_id"
-                        value={formData.product_id}
-                        onChange={handleProductChange}
-                    >
-                        <option value="">
-                            Select Product
-                        </option>
+                    <div>
+                        <label>Product</label>
+                        <br />
 
-                        {products.map((product) => (
-                            <option
-                                key={product.product_id}
-                                value={product.product_id}
-                            >
-                                {product.product_name} -
-                                {" "}
-                                Stock: {product.quantity}
+                        <select
+                            name="product_id"
+                            value={formData.product_id}
+                            onChange={handleProductChange}
+                        >
+                            <option value="">
+                                Select Product
                             </option>
-                        ))}
-                    </select>
+
+                            {products.map((product) => (
+                                <option
+                                    key={product.product_id}
+                                    value={product.product_id}
+                                >
+                                    {product.product_name} -
+                                    {" "}
+                                    Stock: {product.quantity}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <br />
+
+                    {selectedProduct && (
+                        <p>
+                            Available Stock:{" "}
+                            <strong>
+                                {selectedProduct.quantity}
+                            </strong>
+                        </p>
+                    )}
+
+                    <div>
+                        <label>Quantity</label>
+                        <br />
+
+                        <input
+                            type="number"
+                            name="quantity"
+                            min="1"
+                            value={formData.quantity}
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <br />
+
+                    <div>
+                        <label>Selling Price</label>
+                        <br />
+
+                        <input
+                            type="number"
+                            name="selling_price"
+                            min="0"
+                            step="0.01"
+                            value={
+                                formData.selling_price
+                            }
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <br />
+
+                    <button
+                        type="submit"
+                        disabled={submitting}
+                    >
+                        {submitting
+                            ? "Creating Sale..."
+                            : "Create Sale"}
+                    </button>
+
+                </form>
+
+            </section>
+
+            {/* =========================
+                SALES HISTORY
+            ========================= */}
+
+            <section className="sales-history">
+
+                <div className="section-header">
+
+                    <div>
+                        <h2>Sales History</h2>
+
+                        <p className="page-subtitle">
+                            View previously recorded sales
+                        </p>
+                    </div>
+
                 </div>
 
-                <br />
+                {/* =========================
+                    DATE FILTERS
+                ========================= */}
 
-                {selectedProduct && (
-                    <p>
-                        Available Stock:{" "}
-                        <strong>
-                            {selectedProduct.quantity}
-                        </strong>
+                <div className="filter-bar">
+
+                    <div>
+                        <label>Start Date</label>
+                        <br />
+
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => {
+                                setStartDate(
+                                    e.target.value
+                                );
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label>End Date</label>
+                        <br />
+
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => {
+                                setEndDate(
+                                    e.target.value
+                                );
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setStartDate("");
+                            setEndDate("");
+                            setPage(1);
+                        }}
+                    >
+                        Clear Filters
+                    </button>
+
+                </div>
+
+                {salesError && (
+                    <p className="error">
+                        Error: {salesError}
                     </p>
                 )}
 
-                <div>
-                    <label>Quantity</label>
-                    <br />
+                {salesLoading ? (
+                    <p>Loading sales...</p>
+                ) : sales.length === 0 ? (
+                    <p>No sales found.</p>
+                ) : (
+                    <table
+                        border="1"
+                        cellPadding="10"
+                    >
 
-                    <input
-                        type="number"
-                        name="quantity"
-                        min="1"
-                        value={formData.quantity}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <br />
-
-                <div>
-                    <label>Selling Price</label>
-                    <br />
-
-                    <input
-                        type="number"
-                        name="selling_price"
-                        min="0"
-                        step="0.01"
-                        value={formData.selling_price}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <br />
-
-                <button
-                    type="submit"
-                    disabled={submitting}
-                >
-                    {submitting ? "Creating Sale..." : "Create Sale"}
-                </button>
-            </form>
-
-            <hr />
-
-            <hr />
-
-            <h2>Sales History</h2>
-
-            <div>
-                <label>Start Date</label>
-                <br />
-
-                <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => {
-                        setStartDate(e.target.value);
-                        setPage(1);
-                    }}
-                />
-            </div>
-
-            <br />
-
-            <div>
-                <label>End Date</label>
-                <br />
-
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => {
-                        setEndDate(e.target.value);
-                        setPage(1);
-                    }}
-                />
-            </div>
-
-            <br />
-
-            <button
-                type="button"
-                onClick={() => {
-                    setStartDate("");
-                    setEndDate("");
-                    setPage(1);
-                }}
-            >
-                Clear Filters
-            </button>
-
-            <h2>Sales History</h2>
-
-            {salesError && (
-                <p>
-                    Error: {salesError}
-                </p>
-            )}
-
-            {salesLoading ? (
-                <p>Loading sales...</p>
-            ) : sales.length === 0 ? (
-                <p>No sales found.</p>
-            ) : (
-                <table border="1" cellPadding="10">
-                    <thead>
-                        <tr>
-                            <th>Sale ID</th>
-                            <th>Product</th>
-                            <th>Quantity</th>
-                            <th>Selling Price</th>
-                            <th>Total Amount</th>
-                            <th>Date</th>
-                            <th>Sold By</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-                        {sales.map((sale) => (
-                            <tr key={sale.sale_id}>
-                                <td>{sale.sale_id}</td>
-
-                                <td>
-                                    {sale.product_name}
-                                </td>
-
-                                <td>
-                                    {sale.quantity}
-                                </td>
-
-                                <td>
-                                    ₹{sale.selling_price}
-                                </td>
-
-                                <td>
-                                    ₹{(
-                                        Number(sale.quantity) *
-                                        Number(sale.selling_price)
-                                    ).toFixed(2)}
-                                </td>
-
-                                <td>
-                                    {new Date(
-                                        sale.sale_date
-                                    ).toLocaleString()}
-                                </td>
-
-                                <td>
-                                    {sale.sold_by}
-                                </td>
+                        <thead>
+                            <tr>
+                                <th>Sale ID</th>
+                                <th>Product</th>
+                                <th>Quantity</th>
+                                <th>Selling Price</th>
+                                <th>Total Amount</th>
+                                <th>Date</th>
+                                <th>Sold By</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                        </thead>
 
+                        <tbody>
 
-            )}
-            {!salesLoading && sales.length > 0 && (
-                <div>
-                    <br />
+                            {sales.map((sale) => (
+                                <tr
+                                    key={sale.sale_id}
+                                >
 
-                    <button
-                        onClick={() => setPage(page - 1)}
-                        disabled={!hasPreviousPage}
-                    >
-                        Previous
-                    </button>
+                                    <td>
+                                        {sale.sale_id}
+                                    </td>
 
-                    {" "}
+                                    <td>
+                                        {sale.product_name}
+                                    </td>
 
-                    <span>
-                        Page {page} of {totalPages}
-                    </span>
+                                    <td>
+                                        {sale.quantity}
+                                    </td>
 
-                    {" "}
+                                    <td>
+                                        ₹
+                                        {
+                                            sale.selling_price
+                                        }
+                                    </td>
 
-                    <button
-                        onClick={() => setPage(page + 1)}
-                        disabled={!hasNextPage}
-                    >
-                        Next
-                    </button>
-                </div>
-            )}
+                                    <td>
+                                        ₹
+                                        {(
+                                            Number(
+                                                sale.quantity
+                                            ) *
+                                            Number(
+                                                sale.selling_price
+                                            )
+                                        ).toFixed(2)}
+                                    </td>
+
+                                    <td>
+                                        {new Date(
+                                            sale.sale_date
+                                        ).toLocaleString()}
+                                    </td>
+
+                                    <td>
+                                        {sale.sold_by}
+                                    </td>
+
+                                </tr>
+                            ))}
+
+                        </tbody>
+
+                    </table>
+                )}
+
+                {/* =========================
+                    PAGINATION
+                ========================= */}
+
+                {!salesLoading &&
+                    sales.length > 0 && (
+                        <div className="pagination">
+
+                            <button
+                                onClick={() =>
+                                    setPage(page - 1)
+                                }
+                                disabled={
+                                    !hasPreviousPage
+                                }
+                            >
+                                Previous
+                            </button>
+
+                            {" "}
+
+                            <span>
+                                Page {page} of{" "}
+                                {totalPages}
+                            </span>
+
+                            {" "}
+
+                            <button
+                                onClick={() =>
+                                    setPage(page + 1)
+                                }
+                                disabled={
+                                    !hasNextPage
+                                }
+                            >
+                                Next
+                            </button>
+
+                        </div>
+                    )}
+
+            </section>
+
         </div>
     );
 }

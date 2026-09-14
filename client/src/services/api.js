@@ -183,4 +183,19 @@ export const getTransactions = (params = "") => {
 export const getProductTransactions = (id, params = "") => {
     return api(`/transactions/product/${id}${params}`);
 };
+
+export const returnStock = (id, data) => {
+    return api(`/transactions/product/${id}/return`, {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+};
+
+export const adjustStock = (id, data) => {
+    return api(`/products/${id}/adjust-stock`, {
+        method: "PATCH",
+        body: JSON.stringify(data)
+    });
+};
+
 export default api;

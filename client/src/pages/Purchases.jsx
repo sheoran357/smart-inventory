@@ -31,12 +31,14 @@ function Purchases() {
 
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [purchasesLoading, setPurchasesLoading] = useState(true);
+    const [purchasesLoading, setPurchasesLoading] =
+        useState(true);
 
     const [error, setError] = useState("");
     const [formError, setFormError] = useState("");
     const [success, setSuccess] = useState("");
-    const [purchasesError, setPurchasesError] = useState("");
+    const [purchasesError, setPurchasesError] =
+        useState("");
 
     useEffect(() => {
         loadData();
@@ -51,13 +53,15 @@ function Purchases() {
             setLoading(true);
             setError("");
 
-            const [productData, supplierData] = await Promise.all([
-                getProducts("?limit=100"),
-                getSuppliers()
-            ]);
+            const [productData, supplierData] =
+                await Promise.all([
+                    getProducts("?limit=100"),
+                    getSuppliers()
+                ]);
 
             setProducts(productData.products);
             setSuppliers(supplierData);
+
         } catch (error) {
             setError(error.message);
         } finally {
@@ -90,7 +94,9 @@ function Purchases() {
             setPurchases(data.purchases);
             setTotalPages(data.totalPages);
             setHasNextPage(data.hasNextPage);
-            setHasPreviousPage(data.hasPreviousPage);
+            setHasPreviousPage(
+                data.hasPreviousPage
+            );
 
         } catch (error) {
             setPurchasesError(error.message);
@@ -116,7 +122,8 @@ function Purchases() {
 
         const selectedProduct = products.find(
             (product) =>
-                product.product_id === Number(productId)
+                product.product_id ===
+                Number(productId)
         );
 
         setFormData({
@@ -138,12 +145,16 @@ function Purchases() {
         setSuccess("");
 
         if (!formData.product_id) {
-            setFormError("Please select a product");
+            setFormError(
+                "Please select a product"
+            );
             return;
         }
 
         if (!formData.supplier_id) {
-            setFormError("Please select a supplier");
+            setFormError(
+                "Please select a supplier"
+            );
             return;
         }
 
@@ -171,10 +182,18 @@ function Purchases() {
             setSubmitting(true);
 
             const data = await createPurchase({
-                product_id: Number(formData.product_id),
-                supplier_id: Number(formData.supplier_id),
-                quantity: Number(formData.quantity),
-                cost_price: Number(formData.cost_price)
+                product_id: Number(
+                    formData.product_id
+                ),
+                supplier_id: Number(
+                    formData.supplier_id
+                ),
+                quantity: Number(
+                    formData.quantity
+                ),
+                cost_price: Number(
+                    formData.cost_price
+                )
             });
 
             setSuccess(
@@ -200,312 +219,469 @@ function Purchases() {
 
     const selectedProduct = products.find(
         (product) =>
-            product.product_id === Number(
-                formData.product_id
-            )
+            product.product_id ===
+            Number(formData.product_id)
     );
 
     if (loading) {
-        return <p>Loading purchase data...</p>;
+        return (
+            <p>
+                Loading purchase data...
+            </p>
+        );
     }
 
     return (
-        <div>
-            <h1>Purchases</h1>
+        <div className="purchases-page">
+
+            {/* =========================
+                PAGE HEADER
+            ========================= */}
+
+            <div className="page-header">
+
+                <div>
+                    <h1>Purchases</h1>
+
+                    <p className="page-subtitle">
+                        Record purchases and manage
+                        purchase history
+                    </p>
+                </div>
+
+            </div>
 
             {error && (
-                <p>
+                <p className="error">
                     Error: {error}
                 </p>
             )}
 
-            <form onSubmit={handleSubmit}>
+            {/* =========================
+                PURCHASE FORM
+            ========================= */}
+
+            <section className="form-card">
+
                 <h2>
                     {editingPurchase
                         ? "Edit Purchase"
                         : "Create Purchase"}
                 </h2>
 
-                {formError && (
-                    <p>
-                        {formError}
-                    </p>
-                )}
+                <form onSubmit={handleSubmit}>
 
-                {success && (
-                    <p>
-                        {success}
-                    </p>
-                )}
+                    {formError && (
+                        <p className="error">
+                            {formError}
+                        </p>
+                    )}
 
-                <div>
-                    <label>Product</label>
-                    <br />
+                    {success && (
+                        <p className="success">
+                            {success}
+                        </p>
+                    )}
 
-                    <select
-                        name="product_id"
-                        value={formData.product_id}
-                        onChange={handleProductChange}
-                    >
-                        <option value="">
-                            Select Product
-                        </option>
+                    <div>
+                        <label>Product</label>
+                        <br />
 
-                        {products.map((product) => (
-                            <option
-                                key={product.product_id}
-                                value={product.product_id}
-                            >
-                                {product.product_name}
-                                {" - "}
-                                Stock: {product.quantity}
+                        <select
+                            name="product_id"
+                            value={
+                                formData.product_id
+                            }
+                            onChange={
+                                handleProductChange
+                            }
+                        >
+                            <option value="">
+                                Select Product
                             </option>
-                        ))}
-                    </select>
-                </div>
 
-                <br />
-
-                {selectedProduct && (
-                    <p>
-                        Current Stock:{" "}
-                        <strong>
-                            {selectedProduct.quantity}
-                        </strong>
-                    </p>
-                )}
-
-                <div>
-                    <label>Supplier</label>
-                    <br />
-
-                    <select
-                        name="supplier_id"
-                        value={formData.supplier_id}
-                        onChange={handleChange}
-                    >
-                        <option value="">
-                            Select Supplier
-                        </option>
-
-                        {suppliers.map((supplier) => (
-                            <option
-                                key={supplier.supplier_id}
-                                value={supplier.supplier_id}
-                            >
-                                {supplier.supplier_name}
-                            </option>
-                        ))}
-                    </select>
-                </div>
-
-                <br />
-
-                <div>
-                    <label>Quantity</label>
-                    <br />
-
-                    <input
-                        type="number"
-                        name="quantity"
-                        min="1"
-                        value={formData.quantity}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <br />
-
-                <div>
-                    <label>Cost Price</label>
-                    <br />
-
-                    <input
-                        type="number"
-                        name="cost_price"
-                        min="0"
-                        step="0.01"
-                        value={formData.cost_price}
-                        onChange={handleChange}
-                    />
-                </div>
-
-                <br />
-
-                <button
-                    type="submit"
-                    disabled={submitting}
-                >
-                    {submitting
-                        ? "Creating Purchase..."
-                        : "Create Purchase"}
-                </button>
-            </form>
-
-            <hr />
-
-            <h2>Purchase History</h2>
-
-            <div>
-                <label>Start Date</label>
-                <br />
-
-                <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => {
-                        setStartDate(e.target.value);
-                        setPage(1);
-                    }}
-                />
-            </div>
-
-            <br />
-
-            <div>
-                <label>End Date</label>
-                <br />
-
-                <input
-                    type="date"
-                    value={endDate}
-                    onChange={(e) => {
-                        setEndDate(e.target.value);
-                        setPage(1);
-                    }}
-                />
-            </div>
-
-            <br />
-
-            <button
-                type="button"
-                onClick={() => {
-                    setStartDate("");
-                    setEndDate("");
-                    setPage(1);
-                }}
-            >
-                Clear Filters
-            </button>
-
-            <br />
-            <br />
-
-            {purchasesError && (
-                <p>
-                    Error: {purchasesError}
-                </p>
-            )}
-
-            {purchasesLoading ? (
-                <p>Loading purchases...</p>
-            ) : purchases.length === 0 ? (
-                <p>No purchases found.</p>
-            ) : (
-                <>
-                    <table
-                        border="1"
-                        cellPadding="10"
-                    >
-                        <thead>
-                            <tr>
-                                <th>Purchase ID</th>
-                                <th>Product</th>
-                                <th>Supplier</th>
-                                <th>Quantity</th>
-                                <th>Cost Price</th>
-                                <th>Total Cost</th>
-                                <th>Date</th>
-                                <th>Purchased By</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {purchases.map((purchase) => (
-                                <tr
-                                    key={
-                                        purchase.purchase_id
-                                    }
-                                >
-                                    <td>
-                                        {purchase.purchase_id}
-                                    </td>
-
-                                    <td>
-                                        {purchase.product_name}
-                                    </td>
-
-                                    <td>
-                                        {purchase.supplier_name}
-                                    </td>
-
-                                    <td>
-                                        {purchase.quantity}
-                                    </td>
-
-                                    <td>
-                                        ₹
-                                        {purchase.cost_price}
-                                    </td>
-
-                                    <td>
-                                        ₹
-                                        {(
-                                            Number(
-                                                purchase.quantity
-                                            ) *
-                                            Number(
-                                                purchase.cost_price
-                                            )
-                                        ).toFixed(2)}
-                                    </td>
-
-                                    <td>
-                                        {new Date(
-                                            purchase.purchase_date
-                                        ).toLocaleString()}
-                                    </td>
-
-                                    <td>
-                                        {
-                                            purchase.purchased_by
+                            {products.map(
+                                (product) => (
+                                    <option
+                                        key={
+                                            product.product_id
                                         }
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                                        value={
+                                            product.product_id
+                                        }
+                                    >
+                                        {
+                                            product.product_name
+                                        }
+                                        {" - "}
+                                        Stock:{" "}
+                                        {
+                                            product.quantity
+                                        }
+                                    </option>
+                                )
+                            )}
+                        </select>
+                    </div>
+
+                    <br />
+
+                    {selectedProduct && (
+                        <p>
+                            Current Stock:{" "}
+                            <strong>
+                                {
+                                    selectedProduct.quantity
+                                }
+                            </strong>
+                        </p>
+                    )}
+
+                    <div>
+                        <label>Supplier</label>
+                        <br />
+
+                        <select
+                            name="supplier_id"
+                            value={
+                                formData.supplier_id
+                            }
+                            onChange={handleChange}
+                        >
+                            <option value="">
+                                Select Supplier
+                            </option>
+
+                            {suppliers.map(
+                                (supplier) => (
+                                    <option
+                                        key={
+                                            supplier.supplier_id
+                                        }
+                                        value={
+                                            supplier.supplier_id
+                                        }
+                                    >
+                                        {
+                                            supplier.supplier_name
+                                        }
+                                    </option>
+                                )
+                            )}
+                        </select>
+                    </div>
+
+                    <br />
+
+                    <div>
+                        <label>Quantity</label>
+                        <br />
+
+                        <input
+                            type="number"
+                            name="quantity"
+                            min="1"
+                            value={
+                                formData.quantity
+                            }
+                            onChange={handleChange}
+                        />
+                    </div>
+
+                    <br />
+
+                    <div>
+                        <label>Cost Price</label>
+                        <br />
+
+                        <input
+                            type="number"
+                            name="cost_price"
+                            min="0"
+                            step="0.01"
+                            value={
+                                formData.cost_price
+                            }
+                            onChange={handleChange}
+                        />
+                    </div>
 
                     <br />
 
                     <button
-                        onClick={() =>
-                            setPage(page - 1)
-                        }
-                        disabled={!hasPreviousPage}
+                        type="submit"
+                        disabled={submitting}
                     >
-                        Previous
+                        {submitting
+                            ? "Creating Purchase..."
+                            : "Create Purchase"}
                     </button>
 
-                    {" "}
+                </form>
 
-                    <span>
-                        Page {page} of {totalPages}
-                    </span>
+            </section>
 
-                    {" "}
+            {/* =========================
+                PURCHASE HISTORY
+            ========================= */}
+
+            <section className="purchase-history">
+
+                <div className="section-header">
+
+                    <div>
+                        <h2>
+                            Purchase History
+                        </h2>
+
+                        <p className="page-subtitle">
+                            View previously recorded
+                            purchases
+                        </p>
+                    </div>
+
+                </div>
+
+                {/* =========================
+                    DATE FILTERS
+                ========================= */}
+
+                <div className="filter-bar">
+
+                    <div>
+                        <label>
+                            Start Date
+                        </label>
+                        <br />
+
+                        <input
+                            type="date"
+                            value={startDate}
+                            onChange={(e) => {
+                                setStartDate(
+                                    e.target.value
+                                );
+                                setPage(1);
+                            }}
+                        />
+                    </div>
+
+                    <div>
+                        <label>
+                            End Date
+                        </label>
+                        <br />
+
+                        <input
+                            type="date"
+                            value={endDate}
+                            onChange={(e) => {
+                                setEndDate(
+                                    e.target.value
+                                );
+                                setPage(1);
+                            }}
+                        />
+                    </div>
 
                     <button
-                        onClick={() =>
-                            setPage(page + 1)
-                        }
-                        disabled={!hasNextPage}
+                        type="button"
+                        onClick={() => {
+                            setStartDate("");
+                            setEndDate("");
+                            setPage(1);
+                        }}
                     >
-                        Next
+                        Clear Filters
                     </button>
-                </>
-            )}
+
+                </div>
+
+                <br />
+
+                {purchasesError && (
+                    <p className="error">
+                        Error: {purchasesError}
+                    </p>
+                )}
+
+                {purchasesLoading ? (
+                    <p>
+                        Loading purchases...
+                    </p>
+                ) : purchases.length === 0 ? (
+                    <p>
+                        No purchases found.
+                    </p>
+                ) : (
+                    <>
+
+                        {/* =========================
+                            PURCHASE TABLE
+                        ========================= */}
+
+                        <table
+                            border="1"
+                            cellPadding="10"
+                        >
+
+                            <thead>
+                                <tr>
+                                    <th>
+                                        Purchase ID
+                                    </th>
+
+                                    <th>
+                                        Product
+                                    </th>
+
+                                    <th>
+                                        Supplier
+                                    </th>
+
+                                    <th>
+                                        Quantity
+                                    </th>
+
+                                    <th>
+                                        Cost Price
+                                    </th>
+
+                                    <th>
+                                        Total Cost
+                                    </th>
+
+                                    <th>
+                                        Date
+                                    </th>
+
+                                    <th>
+                                        Purchased By
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+
+                                {purchases.map(
+                                    (purchase) => (
+                                        <tr
+                                            key={
+                                                purchase.purchase_id
+                                            }
+                                        >
+
+                                            <td>
+                                                {
+                                                    purchase.purchase_id
+                                                }
+                                            </td>
+
+                                            <td>
+                                                {
+                                                    purchase.product_name
+                                                }
+                                            </td>
+
+                                            <td>
+                                                {
+                                                    purchase.supplier_name
+                                                }
+                                            </td>
+
+                                            <td>
+                                                {
+                                                    purchase.quantity
+                                                }
+                                            </td>
+
+                                            <td>
+                                                ₹
+                                                {
+                                                    purchase.cost_price
+                                                }
+                                            </td>
+
+                                            <td>
+                                                ₹
+                                                {(
+                                                    Number(
+                                                        purchase.quantity
+                                                    ) *
+                                                    Number(
+                                                        purchase.cost_price
+                                                    )
+                                                ).toFixed(2)}
+                                            </td>
+
+                                            <td>
+                                                {new Date(
+                                                    purchase.purchase_date
+                                                ).toLocaleString()}
+                                            </td>
+
+                                            <td>
+                                                {
+                                                    purchase.purchased_by
+                                                }
+                                            </td>
+
+                                        </tr>
+                                    )
+                                )}
+
+                            </tbody>
+
+                        </table>
+
+                        {/* =========================
+                            PAGINATION
+                        ========================= */}
+
+                        <div className="pagination">
+
+                            <button
+                                onClick={() =>
+                                    setPage(
+                                        page - 1
+                                    )
+                                }
+                                disabled={
+                                    !hasPreviousPage
+                                }
+                            >
+                                Previous
+                            </button>
+
+                            {" "}
+
+                            <span>
+                                Page {page} of{" "}
+                                {totalPages}
+                            </span>
+
+                            {" "}
+
+                            <button
+                                onClick={() =>
+                                    setPage(
+                                        page + 1
+                                    )
+                                }
+                                disabled={
+                                    !hasNextPage
+                                }
+                            >
+                                Next
+                            </button>
+
+                        </div>
+
+                    </>
+                )}
+
+            </section>
+
         </div>
     );
 }

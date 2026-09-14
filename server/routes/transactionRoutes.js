@@ -3,7 +3,8 @@ const router = express.Router();
 
 const {
     getTransactions,
-    getProductTransactions
+    getProductTransactions,
+    returnStock
 } = require("../controller/transactionController");
 
 const authenticateToken = require("../Middleware/authMiddleware");
@@ -24,5 +25,11 @@ router.get(
     getProductTransactions
 );
 
+
+router.post(
+    "/product/:id/return",
+    authenticateToken,
+    returnStock
+);
 
 module.exports = router;
