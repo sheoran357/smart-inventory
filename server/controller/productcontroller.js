@@ -8,13 +8,15 @@ const adjustStock = async (req, res) => {
         const { id } = req.params;
         const { quantity, reason } = req.body;
 
-        if (!quantity || quantity === 0) {
+        // Validate quantity
+        if (quantity === undefined || Number(quantity) === 0) {
             return res.status(400).json({
                 message: "Adjustment quantity cannot be zero"
             });
         }
 
-        if (!reason) {
+        // Validate reason
+        if (!reason || reason.trim() === "") {
             return res.status(400).json({
                 message: "Adjustment reason is required"
             });
@@ -22,10 +24,13 @@ const adjustStock = async (req, res) => {
 
         await connection.beginTransaction();
 
-        // Get current stock
+        // Lock product row
         const [products] = await connection.query(
             `
-            SELECT product_id, product_name, quantity
+            SELECT
+                product_id,
+                product_name,
+                quantity
             FROM products
             WHERE product_id = ?
             FOR UPDATE
@@ -43,18 +48,21 @@ const adjustStock = async (req, res) => {
 
         const product = products[0];
 
-        const newQuantity = product.quantity + Number(quantity);
+        const adjustment = Number(quantity);
+        const newQuantity = product.quantity + adjustment;
 
         // Stock cannot become negative
         if (newQuantity < 0) {
             await connection.rollback();
 
             return res.status(400).json({
-                message: "Stock cannot become negative"
+                message: "Stock cannot become negative",
+                current_stock: product.quantity,
+                adjustment: adjustment
             });
         }
 
-        // Update product stock
+        // Update stock
         await connection.query(
             `
             UPDATE products
@@ -64,24 +72,24 @@ const adjustStock = async (req, res) => {
             [newQuantity, id]
         );
 
-        // Record transaction
+        // Record adjustment
         await connection.query(
             `
-    INSERT INTO inventory_transactions
-    (
-        product_id,
-        transaction_type,
-        quantity,
-        user_id,
-        reason
-    )
-    VALUES (?, 'ADJUSTMENT', ?, ?, ?)
-    `,
+            INSERT INTO inventory_transactions
+            (
+                product_id,
+                transaction_type,
+                quantity,
+                user_id,
+                reason
+            )
+            VALUES (?, 'ADJUSTMENT', ?, ?, ?)
+            `,
             [
                 id,
-                quantity,
+                adjustment,
                 req.user.user_id,
-                reason
+                reason.trim()
             ]
         );
 
@@ -91,9 +99,9 @@ const adjustStock = async (req, res) => {
             message: "Stock adjusted successfully",
             product_id: Number(id),
             old_quantity: product.quantity,
-            adjustment: Number(quantity),
+            adjustment: adjustment,
             new_quantity: newQuantity,
-            reason
+            reason: reason.trim()
         });
 
     } catch (error) {
@@ -180,7 +188,7 @@ const getProducts = async (req, res) => {
 
         const offset = (pageNumber - 1) * limitNumber;
 
-        let whereClause = "WHERE 1 = 1";
+        let whereClause = "WHERE p.is_active = TRUE";
         const values = [];
 
         // Search
@@ -337,25 +345,28 @@ const deleteProduct = async (req, res) => {
         const { id } = req.params;
 
         const [result] = await pool.query(
-            "DELETE FROM products WHERE product_id = ?",
+            `UPDATE products
+             SET is_active = FALSE
+             WHERE product_id = ?
+             AND is_active = TRUE`,
             [id]
         );
 
         if (result.affectedRows === 0) {
             return res.status(404).json({
-                message: "Product not found"
+                message: "Product not found or already inactive"
             });
         }
 
         res.status(200).json({
-            message: "Product deleted successfully"
+            message: "Product deactivated successfully"
         });
 
     } catch (error) {
-        console.error("DELETE PRODUCT ERROR:", error);
+        console.error("Delete product error:", error);
 
         res.status(500).json({
-            message: "Failed to delete product"
+            message: "Failed to deactivate product"
         });
     }
 };
@@ -491,7 +502,7 @@ const getProductById = async (req, res) => {
             });
         }
 
-        const [product] = await pool.query("SELECT * FROM products WHERE product_id = ?", [id]);
+        const [product] = await pool.query("SELECT * FROM products WHERE product_id = ? AND is_active = TRUE", [id]);
 
         if (product.length === 0) {
             return res.status(404).json({ message: "Product not found" });
@@ -506,6 +517,67 @@ const getProductById = async (req, res) => {
     }
 };
 
+const restoreProduct = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const [result] = await pool.query(
+            `UPDATE products
+             SET is_active = TRUE
+             WHERE product_id = ?
+             AND is_active = FALSE`,
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                message: "Product not found or already active"
+            });
+        }
+
+        res.status(200).json({
+            message: "Product restored successfully"
+        });
+
+    } catch (error) {
+        console.error("Restore product error:", error);
+
+        res.status(500).json({
+            message: "Failed to restore product"
+        });
+    }
+};
+
+const getInactiveProducts = async (req, res) => {
+    try {
+        const [products] = await pool.query(`
+            SELECT
+                p.product_id,
+                p.product_name,
+                p.description,
+                p.category_id,
+                c.category_name,
+                p.price,
+                p.quantity,
+                p.reorder_level,
+                p.is_active
+            FROM products p
+            LEFT JOIN categories c
+                ON p.category_id = c.category_id
+            WHERE p.is_active = FALSE
+            ORDER BY p.product_id DESC
+        `);
+
+        res.status(200).json(products);
+
+    } catch (error) {
+        console.error("Get inactive products error:", error);
+
+        res.status(500).json({
+            message: "Failed to fetch inactive products"
+        });
+    }
+};
 
 
 module.exports = {
@@ -516,6 +588,8 @@ module.exports = {
     deleteProduct,
     getProductTransactions,
     getStockAlerts,
-    adjustStock
+    adjustStock,
+    restoreProduct,
+    getInactiveProducts
 };
 

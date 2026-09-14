@@ -1,27 +1,28 @@
 const express = require("express");
-
 const router = express.Router();
 
 const {
-    createSale,
-    getSales
-} = require("../controller/saleController");
+    getTransactions,
+    getProductTransactions
+} = require("../controller/transactionController");
 
 const authenticateToken = require("../Middleware/authMiddleware");
 
-const authorizeRoles = require("../Middleware/roleMiddleware");
 
-router.post(
-    "/",
-    authenticateToken,
-    authorizeRoles("ADMIN", "MANAGER", "STAFF"),
-    createSale
-);
-
+// GET ALL TRANSACTIONS
 router.get(
     "/",
     authenticateToken,
-    getSales
+    getTransactions
 );
+
+
+// GET TRANSACTIONS FOR ONE PRODUCT
+router.get(
+    "/product/:id",
+    authenticateToken,
+    getProductTransactions
+);
+
 
 module.exports = router;

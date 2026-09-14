@@ -10,13 +10,15 @@ const authenticateToken = (req, res, next) => {
             });
         }
 
-        const token = authHeader.split(" ")[1];
+        const parts = authHeader.split(" ");
 
-        if (!token) {
+        if (parts.length !== 2 || parts[0] !== "Bearer") {
             return res.status(401).json({
-                message: "Token missing"
+                message: "Invalid authorization format"
             });
         }
+
+        const token = parts[1];
 
         const decoded = jwt.verify(
             token,
@@ -28,6 +30,8 @@ const authenticateToken = (req, res, next) => {
         next();
 
     } catch (error) {
+        console.error("Authentication error:", error.message);
+
         return res.status(401).json({
             message: "Invalid or expired token"
         });

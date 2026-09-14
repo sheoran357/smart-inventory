@@ -56,12 +56,13 @@ const login = async (req, res) => {
         const token = jwt.sign(
             {
                 user_id: user.user_id,
-                role_id: user.role_id,
+                name: user.name,
+                email: user.email,
                 role_name: user.role_name
             },
             process.env.JWT_SECRET,
             {
-                expiresIn: "1h"
+                expiresIn: process.env.JWT_EXPIRES_IN
             }
         );
 
@@ -88,58 +89,114 @@ const login = async (req, res) => {
 
 const register = async (req, res) => {
     try {
-        const {
-            name,
-            email,
-            password,
-            role_id
-        } = req.body;
+        const { name, email, password } = req.body;
 
-        // 1. Validate input
-        if (!name || !email || !password) {
+
+        // -------------------------
+        // VALIDATION
+        // -------------------------
+
+        if (!name || name.trim().length < 2) {
             return res.status(400).json({
-                message: "Name, email and password are required"
+                message: "Name must contain at least 2 characters"
             });
         }
 
-        // 2. Check whether user already exists
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required"
+            });
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!emailRegex.test(email.trim())) {
+            return res.status(400).json({
+                message: "Invalid email format"
+            });
+        }
+
+        if (!password || password.length < 8) {
+            return res.status(400).json({
+                message: "Password must contain at least 8 characters"
+            });
+        }
+
+
+        // -------------------------
+        // NORMALIZE EMAIL
+        // -------------------------
+
+        const normalizedEmail = email.trim().toLowerCase();
+
+
+        // -------------------------
+        // CHECK EXISTING USER
+        // -------------------------
+
         const [existingUsers] = await pool.query(
-            "SELECT user_id FROM users WHERE email = ?",
-            [email]
+            `SELECT user_id
+             FROM users
+             WHERE email = ?`,
+            [normalizedEmail]
         );
 
         if (existingUsers.length > 0) {
             return res.status(409).json({
-                message: "User already exists"
+                message: "Email already registered"
             });
         }
 
-        // 3. Hash password
+
+        // -------------------------
+        // HASH PASSWORD
+        // -------------------------
+
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // 4. Insert user
+
+        // -------------------------
+        // DEFAULT STAFF ROLE
+        // -------------------------
+
+        const staffRoleId = 3;
+
+
+        // -------------------------
+        // CREATE USER
+        // -------------------------
+
         const [result] = await pool.query(
             `INSERT INTO users
-            (name, email, password)
-            VALUES (?, ?, ?, ?)`,
+             (name, email, password, role_id)
+             VALUES (?, ?, ?, ?)`,
             [
-                name,
-                email,
+                name.trim(),
+                normalizedEmail,
                 hashedPassword,
-                3
+                staffRoleId
             ]
         );
 
+
+        // -------------------------
+        // SUCCESS RESPONSE
+        // -------------------------
+
         res.status(201).json({
             message: "User registered successfully",
-            user_id: result.insertId
+            user_id: result.insertId,
+            name: name.trim(),
+            email: normalizedEmail,
+            role: "STAFF"
         });
 
     } catch (error) {
-        console.error(error);
+
+        console.error("Register user error:", error);
 
         res.status(500).json({
-            message: "Registration failed"
+            message: "Failed to register user"
         });
     }
 };

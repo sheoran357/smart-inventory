@@ -11,36 +11,41 @@ const createPurchase = async (req, res) => {
             cost_price
         } = req.body;
 
-        if (!product_id) {
+        // -------------------------
+        // VALIDATION
+        // -------------------------
+
+        if (!product_id || !supplier_id) {
             return res.status(400).json({
-                message: "Product ID is required"
+                message: "Product and supplier are required"
             });
         }
 
-        if (!supplier_id) {
+        if (!quantity || Number(quantity) <= 0) {
             return res.status(400).json({
-                message: "Supplier ID is required"
+                message: "Quantity must be greater than 0"
             });
         }
 
-        if (!quantity || quantity <= 0) {
+        if (cost_price === undefined || Number(cost_price) < 0) {
             return res.status(400).json({
-                message: "Purchase quantity must be greater than zero"
+                message: "Cost price must be 0 or greater"
             });
         }
 
-        if (cost_price === undefined || cost_price < 0) {
-            return res.status(400).json({
-                message: "Cost price must be non-negative"
-            });
-        }
-
-        // 2. Start transaction
         await connection.beginTransaction();
 
-        // 3. Check product exists
+        // -------------------------
+        // CHECK PRODUCT
+        // -------------------------
+
         const [products] = await connection.query(
-            "SELECT product_id FROM products WHERE product_id = ?",
+            `
+            SELECT product_id, product_name, quantity
+            FROM products
+            WHERE product_id = ?
+            FOR UPDATE
+            `,
             [product_id]
         );
 
@@ -52,9 +57,16 @@ const createPurchase = async (req, res) => {
             });
         }
 
-        // 4. Check supplier exists
+        // -------------------------
+        // CHECK SUPPLIER
+        // -------------------------
+
         const [suppliers] = await connection.query(
-            "SELECT supplier_id FROM suppliers WHERE supplier_id = ?",
+            `
+            SELECT supplier_id, supplier_name
+            FROM suppliers
+            WHERE supplier_id = ?
+            `,
             [supplier_id]
         );
 
@@ -66,11 +78,22 @@ const createPurchase = async (req, res) => {
             });
         }
 
-        // 5. Create purchase
+        // -------------------------
+        // CREATE PURCHASE
+        // -------------------------
+
         const [purchaseResult] = await connection.query(
-            `INSERT INTO purchases
-            (product_id, supplier_id, quantity, cost_price, user_id)
-            VALUES (?, ?, ?, ?, ?)`,
+            `
+            INSERT INTO purchases
+            (
+                product_id,
+                supplier_id,
+                quantity,
+                cost_price,
+                user_id
+            )
+            VALUES (?, ?, ?, ?, ?)
+            `,
             [
                 product_id,
                 supplier_id,
@@ -80,22 +103,34 @@ const createPurchase = async (req, res) => {
             ]
         );
 
-        // 6. Increase product stock
+        // -------------------------
+        // INCREASE STOCK
+        // -------------------------
+
         await connection.query(
-            `UPDATE products
-             SET quantity = quantity + ?
-             WHERE product_id = ?`,
-            [
-                quantity,
-                product_id
-            ]
+            `
+            UPDATE products
+            SET quantity = quantity + ?
+            WHERE product_id = ?
+            `,
+            [quantity, product_id]
         );
 
-        // 7. Create inventory transaction
+        // -------------------------
+        // INVENTORY TRANSACTION
+        // -------------------------
+
         await connection.query(
-            `INSERT INTO inventory_transactions
-            (product_id, transaction_type, quantity, user_id)
-            VALUES (?, 'PURCHASE', ?, ?)`,
+            `
+            INSERT INTO inventory_transactions
+            (
+                product_id,
+                transaction_type,
+                quantity,
+                user_id
+            )
+            VALUES (?, 'PURCHASE', ?, ?)
+            `,
             [
                 product_id,
                 quantity,
@@ -103,32 +138,139 @@ const createPurchase = async (req, res) => {
             ]
         );
 
-        // 8. Commit everything
+        // -------------------------
+        // COMMIT
+        // -------------------------
+
         await connection.commit();
 
         res.status(201).json({
             message: "Purchase created successfully",
-            purchase_id: purchaseResult.insertId
+            purchase_id: purchaseResult.insertId,
+            product_id: Number(product_id),
+            supplier_id: Number(supplier_id),
+            quantity: Number(quantity),
+            cost_price: Number(cost_price)
         });
 
     } catch (error) {
 
-        // Undo everything if something failed
         await connection.rollback();
 
-        console.error(error);
+        console.error("Create purchase error:", error);
 
         res.status(500).json({
             message: "Failed to create purchase"
         });
 
     } finally {
-
-        // Return connection to pool
         connection.release();
     }
 };
 
-module.exports = {
-    createPurchase
+const getPurchases = async (req, res) => {
+    try {
+        const {
+            page = 1,
+            limit = 10,
+            startDate,
+            endDate
+        } = req.query;
+
+        let pageNumber = Number(page);
+        let limitNumber = Number(limit);
+
+        if (!Number.isInteger(pageNumber) || pageNumber < 1) {
+            pageNumber = 1;
+        }
+
+        if (!Number.isInteger(limitNumber) || limitNumber < 1) {
+            limitNumber = 10;
+        }
+
+        if (limitNumber > 100) {
+            limitNumber = 100;
+        }
+
+        const offset = (pageNumber - 1) * limitNumber;
+
+        let whereClause = "WHERE 1 = 1";
+        const params = [];
+
+        if (startDate) {
+            whereClause += " AND p.purchase_date >= ?";
+            params.push(startDate);
+        }
+
+        if (endDate) {
+            whereClause += `
+                AND p.purchase_date < DATE_ADD(?, INTERVAL 1 DAY)
+            `;
+            params.push(endDate);
+        }
+
+        const [purchases] = await pool.query(
+            `
+            SELECT
+                p.purchase_id,
+                p.product_id,
+                pr.product_name,
+                p.supplier_id,
+                s.supplier_name,
+                p.quantity,
+                p.cost_price,
+                p.purchase_date,
+                p.user_id,
+                u.name AS purchased_by
+            FROM purchases p
+            JOIN products pr
+                ON p.product_id = pr.product_id
+            JOIN suppliers s
+                ON p.supplier_id = s.supplier_id
+            JOIN users u
+                ON p.user_id = u.user_id
+            ${whereClause}
+            ORDER BY p.purchase_id DESC
+            LIMIT ? OFFSET ?
+            `,
+            [...params, limitNumber, offset]
+        );
+
+        const [countResult] = await pool.query(
+            `
+            SELECT COUNT(*) AS totalPurchases
+            FROM purchases p
+            ${whereClause}
+            `,
+            params
+        );
+
+        const totalPurchases = countResult[0].totalPurchases;
+        const totalPages = Math.ceil(
+            totalPurchases / limitNumber
+        );
+
+        res.status(200).json({
+            page: pageNumber,
+            limit: limitNumber,
+            totalPurchases,
+            totalPages,
+            hasNextPage: pageNumber < totalPages,
+            hasPreviousPage: pageNumber > 1,
+            purchases
+        });
+
+    } catch (error) {
+        console.error("Get purchases error:", error);
+
+        res.status(500).json({
+            message: "Failed to fetch purchases"
+        });
+    }
 };
+
+module.exports = {
+    createPurchase,
+    getPurchases
+};
+

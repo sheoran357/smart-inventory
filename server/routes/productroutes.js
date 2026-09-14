@@ -9,15 +9,10 @@ const authorizeRoles = require("../Middleware/roleMiddleware");
 
 const { getProducts, getProductById, createProduct, updateProduct, 
     deleteProduct, getProductTransactions,getStockAlerts,
-    adjustStock} = require("../controller/productcontroller");
+    adjustStock,restoreProduct,getInactiveProducts} = require("../controller/productcontroller");
 
-router.get("/", getProducts);
+router.get("/", authenticateToken, getProducts);
 
-router.get(
-    "/:id/transactions",
-    authenticateToken,
-    getProductTransactions
-); 
 
 router.get(
     "/alerts",
@@ -25,8 +20,29 @@ router.get(
     getStockAlerts
 );
 
+router.get(
+    "/:id/transactions",
+    authenticateToken,
+    getProductTransactions
+); 
 
-router.get("/:id", getProductById);
+
+router.patch(
+    "/:id/restore",
+    authenticateToken,
+    authorizeRoles("ADMIN"),
+    restoreProduct
+);
+
+router.get(
+    "/inactive",
+    authenticateToken,
+    authorizeRoles("ADMIN"),
+    getInactiveProducts
+);
+
+
+router.get("/:id", authenticateToken, getProductById);
 
 
 router.post(
@@ -58,7 +74,6 @@ router.patch(
     authorizeRoles("ADMIN", "MANAGER"),
     adjustStock
 );
-
 
 module.exports = router;
 
